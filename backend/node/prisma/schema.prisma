@@ -1,0 +1,145 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+  SA
+}
+
+model Project {
+  id          Int       @id @default(autoincrement())
+  name        String
+  country     String?
+  contact     String?
+  status      String     @default("Active")
+  createdAt   DateTime   @default(now())
+
+  client      Client?    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  clientId    Int?
+
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      Int
+
+  tasks       Task[]
+
+  assignedUsers User[] @relation("AssignedProjects")
+
+  @@unique([userId, name])
+  @@index([userId])
+}
+
+
+model Task {
+  id        Int      @id @default(autoincrement())
+  title     String
+  done      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  projectId Int
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId    Int
+
+  description     String?
+  status          String       @default("NEW")
+
+  assignee        User?        @relation("AssignedTasks", fields: [assigneeId], references: [id])
+  assigneeId      Int?
+
+  client          Client?      @relation(fields: [clientId], references: [id])
+  clientId        Int?
+
+  startDate       DateTime?
+  endDate         DateTime?
+
+  estimatedHours  Int?
+  timeSpentHours  Int?
+  progress        Int?         @default(0)
+
+  @@unique([projectId, title])
+  @@index([projectId])
+  @@index([userId])
+}
+
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String?
+  email     String   @unique
+  password  String?
+  provider   String    @default("local")
+  role      Role     @default(USER)
+  status    String   @default("Active")
+  refreshToken  String?
+  resetToken    String?
+  resetTokenExp DateTime?
+  createdAt DateTime @default(now())
+  clients   Client[]
+  projects  Project[]
+  tasks     Task[]
+  assignedTasks Task[] @relation("AssignedTasks")
+  assignedProjects Project[] @relation("AssignedProjects")
+  activities Activity[]
+}
+
+
+model Client {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  company   String?
+  phone     String?
+  status    String   @default("Active")
+  createdAt DateTime @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+
+  projects  Project[]
+  tasks     Task[]
+}
+
+model Activity {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type      String
+  message   String
+  targetType String
+  targetId  Int?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([targetType])
+}
+
+enum AiType {
+  SUMMARIZE
+  SENTIMENT
+  CSV
+}
+
+enum AiStatus {
+  PENDING
+  SUCCESS
+  ERROR
+}
+
+model AiResult {
+  id         Int       @id @default(autoincrement())
+  type       AiType
+  preview    String     @db.VarChar(200)
+  status     AiStatus   @default(SUCCESS)
+  createdAt  DateTime   @default(now())
+
+  @@index([createdAt, type, status])
+}

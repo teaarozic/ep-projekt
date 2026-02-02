@@ -1,0 +1,229 @@
+version: 1
+
+reviews:
+  profile: chill
+  path_filters:
+    - '!dist/**'
+    - '!build/**'
+    - '!mini-projects/**'
+  tools:
+    actionlint: { enabled: true }
+    flake8: { enabled: true }
+    eslint: { enabled: true }
+    markdownlint: { enabled: true }
+
+review:
+  target_branches: ['main', 'develop']
+  max_pr_files: 40
+  max_pr_size_loc: 800
+  languages: ['javascript', 'typescript', 'python']
+  frameworks: ['react', 'next.js']
+  goals:
+    - enforce_security_basics
+    - encourage_simple_solutions
+    - avoid_overengineering
+    - maintain_readability
+    - promote_test_coverage
+    - ensure_consistent_style
+    - improve_accessibility
+    - optimize_performance
+
+style:
+  # JavaScript/TypeScript
+  typescript:
+    strict_mode: true
+    prefer_interfaces_over_types: true
+    no_any_types: true
+    explicit_return_types: true
+    no_unused_vars: true
+    prefer_nullish_coalescing: true
+
+  javascript:
+    es_version: 'ES2022'
+    prefer_const: true
+    no_var: true
+    no_console_log: 'warn' # Allow console.log but warn about it
+
+  # React/Next.js specific
+  react:
+    hooks_rules: true
+    component_naming: 'PascalCase'
+    props_destructuring: true
+    prefer_functional_components: true
+    jsx_fragments: true
+    key_prop_required: true
+    no_array_index_as_key: true
+
+  nextjs:
+    image_optimization: true
+    dynamic_imports: true
+    app_router_patterns: true
+    seo_requirements: true
+    head_component_usage: true
+    api_route_conventions: true
+
+  # Python
+  python:
+    style: 'pep8-strict'
+    line_length: 88
+    enforce_docstrings: true
+    type_hints_required: true
+    import_sorting: 'isort'
+    no_star_imports: true
+    prefer_f_strings: true
+
+security:
+  checks:
+    - owasp_top10
+    - secrets_scan
+    - dependency_audit
+    - input_validation
+    - csrf_protection
+    - xss_protection
+    - sql_injection_prevention
+    - authentication_patterns
+
+  react_security:
+    - dangerously_set_inner_html_warnings
+    - external_links_security
+    - component_props_validation
+    - href_javascript_protocol: 'error'
+    - untrusted_html_rendering: 'error'
+
+  python_security:
+    - eval_exec_usage
+    - pickle_security
+    - path_traversal
+    - os_command_injection
+    - hardcoded_passwords: 'error' # pragma: allowlist secret
+
+testing:
+  require_unit_tests: true
+  coverage_threshold: 70
+  test_patterns:
+    javascript: ['*.test.js', '*.spec.js', '*.test.tsx', '*.spec.tsx']
+    python: ['test_*.py', '*_test.py']
+
+  react_testing:
+    - component_testing_library
+    - accessibility_testing
+    - snapshot_testing: false # Discourage snapshot tests
+    - mock_external_dependencies: true
+    - test_user_interactions: true
+
+  python_testing:
+    - pytest_conventions
+    - mock_usage_patterns
+    - async_testing_patterns
+    - fixture_organization: true
+
+performance:
+  enable_checks: true
+
+  react_performance:
+    - bundle_size_monitoring
+    - lazy_loading_suggestions
+    - memo_optimization_hints
+    - image_optimization_checks
+    - core_web_vitals
+    - unnecessary_rerenders: 'warn'
+    - large_bundle_warnings:
+        threshold_kb: 500
+
+  nextjs_performance:
+    - static_generation_usage
+    - api_routes_optimization
+    - middleware_efficiency
+    - font_optimization: true
+    - prefetch_optimization: true
+
+  python_performance:
+    - async_efficiency
+    - database_query_optimization
+    - memory_usage_patterns
+    - algorithmic_complexity
+    - n_plus_one_query_detection
+    - inefficient_loops: 'warn'
+
+accessibility:
+  enable_checks: true
+  wcag_level: 'AA'
+  react_a11y_rules: true
+  semantic_html_enforcement: true
+  color_contrast_ratio: 4.5
+  keyboard_navigation: true
+  screen_reader_support: true
+
+code_quality:
+  complexity_threshold: 10
+  function_length_limit: 50
+  class_length_limit: 200
+  parameter_count_limit: 5
+  nesting_depth_limit: 4
+
+  anti_patterns:
+    - code_duplication
+    - magic_numbers
+    - deeply_nested_conditionals
+    - long_parameter_lists
+    - god_objects
+    - feature_envy
+    - shotgun_surgery
+
+documentation:
+  require_readme_updates: true
+  api_documentation: true
+  component_documentation: true
+  changelog_updates: true
+  require_inline_comments: true
+  jsdoc_required: true
+  python_docstring_style: 'google'
+
+git_patterns:
+  commit_message_format: 'conventional'
+  branch_naming:
+    - 'feature/*'
+    - 'bugfix/*'
+    - 'hotfix/*'
+    - 'chore/*'
+  squash_commits_recommendation: true
+
+ignore_patterns:
+  files:
+    - '*.min.js'
+    - '*.generated.*'
+    - 'node_modules/**'
+    - '__pycache__/**'
+    - '.next/**'
+    - 'build/**'
+    - 'dist/**'
+    - '*.lock'
+    - '.env*'
+
+  directories:
+    - 'coverage/'
+    - '.pytest_cache/'
+    - '.mypy_cache/'
+
+ignore_users:
+  - 'dependabot[bot]'
+  - 'github-actions[bot]'
+  - 'renovate[bot]'
+
+notifications:
+  slack_webhook: '${SLACK_WEBHOOK_URL}'
+  email_reports: true
+  summary_frequency: 'weekly'
+  critical_issues_immediate: true
+
+# Environment-specific overrides
+environments:
+  staging:
+    performance:
+      bundle_size_warnings:
+        threshold_kb: 300 # Stricter for staging
+
+  production:
+    security:
+      enforce_https: true
+      strict_csp: true

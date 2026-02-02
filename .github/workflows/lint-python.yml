@@ -1,0 +1,57 @@
+name: Lint & Test (Python)
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  lint-python:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11'] # Matrix za bolju pokrivenost
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        working-directory: ./backend/python
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run lint (flake8)
+        working-directory: ./backend/python
+        run: |
+          if [ -d "app" ]; then
+            flake8 app --max-line-length=100 --extend-ignore=E203,W503
+          else
+            echo "⚠️ Skipping lint: no app directory found"
+          fi
+
+      - name: Run tests (pytest)
+        working-directory: ./backend/python
+        run: |
+          pip install httpx
+          if [ -d "app/tests" ]; then
+            pytest app/tests -v --tb=short
+          else
+            echo "⚠️ Skipping tests: no tests directory found"
+          fi

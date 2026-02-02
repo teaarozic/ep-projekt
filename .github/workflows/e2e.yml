@@ -1,0 +1,184 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+jobs:
+  e2e-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30 # Prevent hanging tests
+    env:
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+
+    strategy:
+      matrix:
+        node-version: [20.x] # Use stable version for E2E
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: |
+            frontend/package-lock.json
+            backend/node/package-lock.json
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # Install all dependencies
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Install backend/node dependencies
+        working-directory: ./backend/node
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Install Python dependencies
+        working-directory: ./backend/python
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # Build Next.js frontend
+      - name: Build Next.js frontend
+        working-directory: ./frontend
+        run: |
+          npm run build
+          echo "✅ Next.js build completed successfully"
+
+      # Create basic E2E test structure if missing
+      - name: Setup E2E tests
+        working-directory: ./frontend
+        run: |
+          if [ ! -d "e2e" ]; then
+            mkdir -p e2e
+            npm install --save-dev @playwright/test
+            npx playwright install chromium
+
+            cat > e2e/basic.spec.js << 'EOF'
+          const { test, expect } = require('@playwright/test');
+
+          test('frontend loads successfully', async ({ page }) => {
+            await page.goto('http://localhost:3000');
+            await expect(page).toHaveTitle(/Next.js/);
+          });
+
+          test('api health check', async ({ page }) => {
+            const response = await page.request.get('http://localhost:8000/health');
+            expect(response.status()).toBe(200);
+          });
+          EOF
+
+            cat > playwright.config.js << 'EOF'
+          module.exports = {
+            testDir: './e2e',
+            timeout: 30000,
+            use: {
+              baseURL: 'http://localhost:3000',
+              headless: true,
+            },
+            webServer: [
+              {
+                command: 'npm run start',
+                port: 3000,
+                timeout: 120000,
+                reuseExistingServer: !process.env.CI,
+              }
+            ],
+          };
+          EOF
+          else
+            npx playwright install --with-deps chromium
+          fi
+
+      # Start services
+      - name: Start Python backend
+        working-directory: ./backend/python
+        run: |
+          # Create startup script if main.py exists
+          if [ -f "app/main.py" ]; then
+            uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+            echo "Python backend started on port 8000"
+          fi
+
+      - name: Start Node backend
+        working-directory: ./backend/node
+        run: |
+          # Start if app.js or server.js exists
+          if [ -f "app.js" ] || [ -f "server.js" ] || [ -f "index.js" ]; then
+            npm start &
+            echo "Node backend started"
+          else
+            echo "⚠️ No main server file found - creating basic Express server"
+            cat > index.js << 'EOF'
+          const express = require('express');
+          const app = express();
+          const PORT = process.env.PORT || 3001;
+
+          app.get('/', (req, res) => {
+            res.json({ message: 'Skeleton Node.js backend running!' });
+          });
+
+          app.get('/health', (req, res) => {
+            res.json({ status: 'healthy' });
+          });
+
+          app.listen(PORT, () => {
+            console.log(`Server running on port ${PORT}`);
+          });
+          EOF
+            node index.js &
+          fi
+
+      - name: Wait for services to start
+        run: |
+          echo "⏳ Waiting for services to start..."
+          sleep 15
+
+          # Check if services are responding
+          curl -f http://localhost:3000 || echo "Frontend not ready"
+          curl -f http://localhost:8000/health || echo "Python backend not ready"
+          curl -f http://localhost:3001/health || echo "Node backend not ready"
+
+      # Run E2E tests
+      - name: Run Playwright tests
+        working-directory: ./frontend
+        run: |
+          if [ -f "playwright.config.js" ]; then
+            npx playwright test --reporter=line
+          else
+            echo "✅ No E2E tests configured - skeleton ready for development"
+          fi
+
+      # Upload artifacts on failure
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: e2e-test-results
+          path: |
+            frontend/test-results/
+            frontend/playwright-report/
+          retention-days: 7

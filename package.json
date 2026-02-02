@@ -1,0 +1,52 @@
+{
+  "name": "lab-q3-q4-2025-dev1",
+  "version": "1.0.0",
+  "description": "This repository provides a starter structure for a full-stack web application. It is designed as a sandbox for experimenting with modern frontend, backend, and DevOps practices.",
+  "type": "module",
+  "scripts": {
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev:backend": "npm run dev --prefix backend/node",
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "build": "echo 'No build step for static app'",
+    "build:backend": "npm --prefix backend run build",
+    "start": "live-server .",
+    "start:backend": "npm --prefix backend run start",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "jest",
+    "test:e2e": "playwright test",
+    "prisma:generate": "npm --prefix backend run prisma:generate",
+    "prisma:migrate": "npm --prefix backend run prisma:migrate",
+    "prisma:seed": "npm --prefix backend run prisma:seed",
+    "seed": "npm --prefix backend run seed"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.34.0",
+    "@typescript-eslint/eslint-plugin": "^8.41.0",
+    "@typescript-eslint/parser": "^8.41.0",
+    "concurrently": "^9.2.1",
+    "eslint": "^9.34.0",
+    "prettier": "^3.6.2",
+    "prettier-plugin-tailwindcss": "^0.6.14",
+    "prisma": "^6.16.2",
+    "typescript": "^5.9.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/QLabs-sandbox/lab-q3-q4-2025-dev1.git"
+  },
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/QLabs-sandbox/lab-q3-q4-2025-dev1/issues"
+  },
+  "homepage": "https://github.com/QLabs-sandbox/lab-q3-q4-2025-dev1#readme",
+  "dependencies": {
+    "@prisma/client": "^6.16.2"
+  }
+}

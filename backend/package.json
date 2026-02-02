@@ -1,0 +1,26 @@
+{
+  "name": "backend-root",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix node run dev",
+    "build": "npm --prefix node run build",
+    "start": "npm --prefix node run start",
+    "prisma:generate": "npm --prefix node run prisma:generate",
+    "prisma:migrate": "npm --prefix node run prisma:migrate",
+    "prisma:seed": "npm --prefix node run prisma:seed",
+    "seed": "npm --prefix node run seed",
+    "lint": "npm --prefix node run lint",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "multer": "^2.0.2"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express-session": "^1.18.2",
+    "@types/multer": "^2.0.0",
+    "@types/supertest": "^6.0.3",
+    "supertest": "^7.1.4"
+  }
+}

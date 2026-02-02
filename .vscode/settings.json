@@ -1,0 +1,41 @@
+{
+  // --- PYTHON INTERPRETER & DJANGO PATH ---
+  "python.defaultInterpreterPath": "backend/django/venv/bin/python",
+  "python.analysis.extraPaths": [
+    "backend/django"
+  ],
+
+  // --- PYLANCE ANALYSIS SETTINGS ---
+  "python.analysis.autoImportCompletions": true,
+  "python.analysis.useLibraryCodeForTypes": true,
+  "python.analysis.diagnosticSeverityOverrides": {
+  "reportMissingImports": "none",
+  "reportAttributeAccessIssue": "none",
+  "reportGeneralTypeIssues": "none",
+  "reportUndefinedVariable": "none"
+},
+
+  // --- EDITOR SETTINGS ---
+  "editor.formatOnSave": true,
+
+  // --- FORMATTERS ---
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+
+  // --- MISC ---
+  "css.lint.unknownAtRules": "ignore",
+  "python-envs.pythonProjects": []
+}
